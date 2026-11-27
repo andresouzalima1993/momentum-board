@@ -1,44 +1,22 @@
 name: paper-hourly
+# Watchdog. Runs on the hourly cron (GitHub may delay or skip it; that is fine). It never touches the data:
+# it only checks whether a paper-loop run is active or queued, and starts one if the chain died.
 on:
   schedule:
-    - cron: '7 * * * *'      # every hour at minute 07 UTC (GitHub may delay it; the engine catches up missed hours)
+    - cron: '7 * * * *'
   workflow_dispatch:
 permissions:
-  contents: write
-  pages: write
-concurrency:
-  group: paper-run
-  cancel-in-progress: false
+  contents: read
+  actions: write
 jobs:
-  run:
+  watchdog:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install --quiet numpy pandas requests
-      - uses: actions/cache@v4
-        with:
-          path: .cache
-          key: candles-${{ github.run_id }}
-          restore-keys: candles-
-      - name: Run paper engine (public Hyperliquid data only; no orders, no keys)
-        run: python engine/run_all.py
-      - name: Guard
-        run: python engine/guard.py
-      - name: Commit and push
+      - name: Restart the loop if it is not running
         run: |
-          git config user.name "paper-runner"
-          git config user.email "paper-runner@users.noreply.github.com"
-          printf 'User-agent: *\nDisallow: /\n' > robots.txt
-          : > .nojekyll
-          git add data index.html backtest.html robots.txt .nojekyll
-          if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
-          git commit -q -m "paper run $(date -u '+%Y-%m-%d %H:%M') UTC"
-          for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin HEAD:main && break || sleep $((10*i)); done
-      - name: Trigger Pages build
-        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" --silent || true
-        env:
-          GH_TOKEN: ${{ github.token }}
+          n=$(gh run list --repo "${{ github.repository }}" --workflow paper-loop --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued" or .status=="pending" or .status=="waiting")] | length')
+          echo "active or queued paper-loop runs: $n"
+          if [ "$n" = "0" ]; then gh workflow run paper-loop --repo "${{ github.repository }}" -f loop_minutes=325 --ref main && echo "loop restarted"; fi

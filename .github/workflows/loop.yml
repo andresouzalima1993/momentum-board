@@ -1,0 +1,45 @@
+name: paper-loop
+# Long-running chain: one job loops for ~5h25m (one iteration per UTC hour at minute 02), then re-dispatches itself.
+# Concurrency: ONE group, cancel-in-progress=false. A new dispatch while the loop is running waits as "pending" (it never cancels the active
+# loop) and starts only when the active one finishes. This is exactly the hand-over: the loop dispatches its successor just before exiting.
+# GitHub keeps at most one pending run per group, so duplicate dispatches collapse into one (never two loops at the same time).
+on:
+  workflow_dispatch:
+    inputs:
+      loop_minutes:
+        description: 'minutes to loop before handing over (default 325)'
+        required: false
+        default: '325'
+permissions:
+  contents: write
+  pages: write
+  actions: write
+concurrency:
+  group: paper-loop
+  cancel-in-progress: false
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install --quiet numpy pandas requests
+      - uses: actions/cache@v4
+        with:
+          path: .cache
+          key: candles-${{ github.run_id }}
+          restore-keys: candles-
+      - name: git identity
+        run: |
+          git config user.name "paper-runner"
+          git config user.email "paper-runner@users.noreply.github.com"
+      - name: Hourly loop (public Hyperliquid data only; no orders, no keys)
+        run: bash engine/loop.sh "${{ github.event.inputs.loop_minutes || '325' }}"
+      - name: Hand over to the next loop run
+        if: always()
+        run: gh workflow run paper-loop -f loop_minutes=325 --ref main
