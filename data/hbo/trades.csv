@@ -1,1 +1,10 @@
 time_utc,sub,coin,action,side,qty,price,notional_usd,fee_usd,realized_pnl_usd,funding_usd,reason,stop_level,slippage_usd,fill_source,entry_price,entry_time
+2026-11-27 15:00:00,n48/h72,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n48/h96,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n48/h120,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n72/h72,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n72/h96,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n72/h120,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n96/h72,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n96/h96,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
+2026-11-27 15:00:00,n96/h120,XMR,open,short,0.033,419.911968,13.86,0.006236,0.0,0.0,breakout_entry,501.684468,0.005545,candle_open,,
