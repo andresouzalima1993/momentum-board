@@ -66,24 +66,30 @@ def combined_row(base, mids, now_ms):
     return dict(time_utc=HB.ts_of(now_ms), equity_usd=round(eq_d + eq_h, 4), donchian_usd=round(eq_d, 4), hbo_usd=round(eq_h, 4))
 
 def write_daily(base, rows, now_ms, say):
-    """Persist the daily-close snapshot (00:00 UTC) of every completed UTC day from the hourly equity rows (nearest observation to the boundary)."""
+    """Persist the daily-close snapshot of every completed BRT day (close = 00:00 BRT = 03:00 UTC) from the hourly equity rows (observation nearest to the boundary).
+    `date` is the BRT date that just ended. The file is rebuilt from the hourly equity log on every run, so it is always consistent.
+    Inception day: a BRT day that has less than 6 hours of life since the start is skipped, its minutes belong to the first full day (baseline = start capital)."""
     meta = read_json(os.path.join(base, 'combined', 'meta.json')); p = os.path.join(base, 'combined', 'daily.csv')
-    have = {x['date'] for x in csv.DictReader(open(p))} if os.path.exists(p) else set()
-    start = pd.Timestamp(meta['start_utc']).floor('D'); today = pd.Timestamp(now_ms, unit='ms').floor('D')
-    xf = list(csv.DictReader(open(os.path.join(base, 'combined', 'transfers.csv')))) if os.path.exists(os.path.join(base, 'combined', 'transfers.csv')) else []
-    ts = [pd.Timestamp(x['time_utc']) for x in rows]; new = []
-    for D in pd.date_range(start, today - pd.Timedelta(days=1), freq='D'):
-        ds = D.strftime('%Y-%m-%d')
-        if ds in have: continue
-        b = D + pd.Timedelta(days=1)
+    BRT_OFF = pd.Timedelta(hours=3)
+    start = pd.Timestamp(meta['start_utc']); today = (pd.Timestamp(now_ms, unit='ms') - BRT_OFF).floor('D')   # current BRT date, as a naive midnight
+    xp = os.path.join(base, 'combined', 'transfers.csv')
+    xf = list(csv.DictReader(open(xp))) if os.path.exists(xp) else []
+    ts = [pd.Timestamp(x['time_utc']) for x in rows]; out = []
+    for D in pd.date_range((start - BRT_OFF).floor('D'), today - pd.Timedelta(days=1), freq='D'):
+        b = D + pd.Timedelta(days=1) + BRT_OFF                    # 00:00 BRT of the next day, in naive UTC
+        if b - start < pd.Timedelta(hours=6): continue
         if not rows or ts[-1] < b: continue
         i = min(range(len(rows)), key=lambda k: abs((ts[k] - b).total_seconds())); x = rows[i]
         cum = sum((1 if t['moved_to'] == 'Donchian' else -1) * float(t['usd']) for t in xf if pd.Timestamp(t['time_utc']) <= ts[i])
-        new.append(dict(date=ds, snapshot_time_utc=x['time_utc'], equity_usd=x['equity_usd'], donchian_usd=x['donchian_usd'], hbo_usd=x['hbo_usd'],
+        out.append(dict(date=D.strftime('%Y-%m-%d'), snapshot_time_utc=x['time_utc'], equity_usd=x['equity_usd'], donchian_usd=x['donchian_usd'], hbo_usd=x['hbo_usd'],
                         donchian_transfers=round(cum, 2), hbo_transfers=round(-cum, 2)))
-    if new:
-        HL.append_csv(p, ['date', 'snapshot_time_utc', 'equity_usd', 'donchian_usd', 'hbo_usd', 'donchian_transfers', 'hbo_transfers'], new)
-        say(f"Daily snapshots written: {', '.join(n['date'] for n in new)}")
+    cols = ['date', 'snapshot_time_utc', 'equity_usd', 'donchian_usd', 'hbo_usd', 'donchian_transfers', 'hbo_transfers']
+    old = list(csv.DictReader(open(p))) if os.path.exists(p) else []
+    if [{k: str(v) for k, v in r.items()} for r in out] == [{k: str(v) for k, v in r.items()} for r in old]: return
+    with open(p + '.tmp', 'w', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=cols); w.writeheader(); [w.writerow(r) for r in out]
+    os.replace(p + '.tmp', p)
+    say(f"Daily snapshots (BRT close) rebuilt: {', '.join(n['date'] for n in out) or 'none yet'}")
 
 def main():
     ap = argparse.ArgumentParser()

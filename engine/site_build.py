@@ -83,7 +83,7 @@ def table(head, rows, empty='None yet'):
 def td(v, c='', l=False): return f'<td class="{("l " if l else "")}{c}">{v}</td>'
 
 def daily_rows(base, START_CAP):
-    """Daily-close snapshots (00:00 UTC) persisted by the runner, turned into P&L / NAV rows. Sleeve P&L excludes internal transfers."""
+    """Daily-close snapshots (00:00 BRT = 03:00 UTC) persisted by the runner, turned into P&L / NAV rows. Sleeve P&L excludes internal transfers."""
     snaps = rcsv(os.path.join(base, 'combined', 'daily.csv')); out = []
     prev_eq = START_CAP; prev_d = prev_h = START_CAP / 2
     for r in snaps:
@@ -95,7 +95,7 @@ def daily_rows(base, START_CAP):
 
 def daily_section(base, ceq, tot, last, START_CAP, xfers, now):
     rows, prev_eq, prev_d, prev_h = daily_rows(base, START_CAP)
-    today = now.strftime('%Y-%m-%d')
+    today = now.astimezone(BRT).strftime('%Y-%m-%d')
     if last:
         xd = sum((1 if x['moved_to'] == 'Donchian' else -1) * f(x['usd']) for x in xfers)
         d = f(last['donchian_usd']) - xd; h = f(last['hbo_usd']) + xd
@@ -106,12 +106,12 @@ def daily_section(base, ceq, tot, last, START_CAP, xfers, now):
         lab = f"{r['date']} <span class=\"badge badge-blue\">intraday</span>" if r['intraday'] else r['date']
         body.append('<tr>' + td(lab, l=True) + td(usd(r['eq'])) + td(usd(r['pnl'], True), cls(r['pnl'])) + td(pct(r['dret']), cls(r['dret']))
                     + td(f"<b>{r['nav']:.4f}</b>") + td(pct(r['cum']), cls(r['cum'])) + td(usd(r['dpnl'], True), cls(r['dpnl'])) + td(usd(r['hpnl'], True), cls(r['hpnl'])) + '</tr>')
-    o = ['<section class="panel"><h2>Daily P&amp;L and NAV per unit</h2><p class="section-sub">One row per UTC day, from the daily close snapshot (00:00 UTC = 21:00 BRT) of the hourly equity. '
+    o = ['<section class="panel"><h2>Daily P&amp;L and NAV per unit</h2><p class="section-sub">One row per São Paulo day (BRT). Each day closes at 00:00 BRT (= 03:00 UTC), taken from the hourly equity of the 03:02 UTC run, and is labelled with the BRT date that just ended. The first row also includes the first minutes after inception (26 Nov, 23:24 BRT). '
          'NAV per unit starts at 1.0000 and equals equity ÷ US$ 10,000.00 of initial units; there are no deposits or withdrawals, and the monthly rebalance between sleeves is an internal transfer, so it never changes NAV. '
          'Sleeve P&amp;L also excludes that transfer. The current day is partial (intraday) and is measured against the last daily close.</p>']
     pts = [(r['date'][5:] + (' *' if r['intraday'] else ''), r['nav']) for r in rows]
     if len(pts) > 1: o.append(svg_lines([('NAV per unit', '#0f1f4b', pts)], h=190, baseline=1.0, ydec=4))
-    o.append(table(['Date (UTC)', 'Equity', 'Daily P&L', 'Daily return', 'NAV per unit', 'Cumulative return', 'Donchian P&L', 'HBO P&L'], body, 'Waiting for the first run.'))
+    o.append(table(['Date (BRT)', 'Equity', 'Daily P&L', 'Daily return', 'NAV per unit', 'Cumulative return', 'Donchian P&L', 'HBO P&L'], body, 'Waiting for the first run.'))
     o.append('</section>')
     return ''.join(o)
 
