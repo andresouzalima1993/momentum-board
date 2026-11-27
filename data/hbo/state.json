@@ -1,7 +1,7 @@
 {
  "start_capital": 5000.0,
  "start_ms": 1795746285061,
- "last_bar": 498817,
+ "last_bar": 498827,
  "subs": [
   {
    "n": 48,
@@ -192,5 +192,5 @@
    "kPEPE": 9
   }
  },
- "last_run_ms": 1795746753759
+ "last_run_ms": 1795780806134
 }
