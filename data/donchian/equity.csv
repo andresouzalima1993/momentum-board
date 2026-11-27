@@ -1,0 +1,2 @@
+date,exec_time_utc,equity_usd,return_since_start_pct,price_pnl_usd,funding_usd,fees_usd,slippage_usd,cash_yield_usd,gross_exposure,margin_used_usd,maint_margin_usd,n_positions,n_trades,equity_ex_yield_usd
+2026-11-26,2026-11-27 02:28:39,4998.8026,-0.0239,0.0,0.0,1.0395,0.1579,0.0,0.8665,520.5,260.25,37,37,4998.8026
