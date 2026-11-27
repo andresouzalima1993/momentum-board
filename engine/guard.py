@@ -9,7 +9,7 @@ def files():
         for dp, _, fs in os.walk(os.path.join(ROOT, d)):
             if '__pycache__' in dp: continue
             for fn in fs: yield os.path.join(dp, fn)
-    for fn in ('index.html', 'robots.txt', 'README.md'):
+    for fn in ('index.html', 'backtest.html', 'robots.txt', 'README.md'):
         p = os.path.join(ROOT, fn)
         if os.path.exists(p): yield p
 for p in files():
@@ -17,15 +17,20 @@ for p in files():
     except Exception: continue
     rel = os.path.relpath(p, ROOT)
     if BANNED in t.lower(): bad.append(f'{rel}: forbidden word')
-    if re.search(r'\bAPP\b', t) and rel.startswith(('data', 'index')): bad.append(f'{rel}: excluded ticker present')
-    if rel.startswith(('data', 'index')) or rel == 'robots.txt':
+    if re.search(r'\bAPP\b', t) and rel.startswith(('data', 'index', 'backtest')): bad.append(f'{rel}: excluded ticker present')
+    if rel.startswith(('data', 'index', 'backtest')) or rel == 'robots.txt':
         if re.search(r'andré de souza|andre de souza|andresouzalima1993@|hotmail\.com|gmail\.com|outlook\.com|yahoo\.com', t, re.I): bad.append(f'{rel}: name or e-mail')
         if re.search(r'gho_[A-Za-z0-9]+|ghp_[A-Za-z0-9]+|github_pat_[A-Za-z0-9_]+|BEGIN [A-Z ]*PRIVATE KEY|0x[0-9a-fA-F]{40}', t): bad.append(f'{rel}: token, key or wallet address')
+bt = os.path.join(ROOT, 'backtest.html')
+if os.path.exists(bt):
+    h = open(bt, encoding='utf-8').read()
+    if 'Backtest evidence' not in h or 'name="robots" content="noindex,nofollow"' not in h: bad.append('backtest.html: incomplete')
 idx = os.path.join(ROOT, 'index.html')
 if os.path.exists(idx):
     h = open(idx, encoding='utf-8').read()
     if 'name="robots" content="noindex,nofollow"' not in h: bad.append('index.html: meta robots missing')
-    if 'Strategy rules' not in h or 'Open positions' not in h: bad.append('index.html: page looks incomplete')
+    if 'Strategy rules' not in h or 'Open positions' not in h or 'Daily P&amp;L' not in h: bad.append('index.html: page looks incomplete')
+    if 'Backtest evidence' in h or 'MOIC' in h: bad.append('index.html: contains backtest content')
 if bad:
     print('GUARD REFUSED:\n  ' + '\n  '.join(bad)); sys.exit(1)
 print('guard ok')

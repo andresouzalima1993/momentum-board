@@ -65,6 +65,26 @@ def combined_row(base, mids, now_ms):
     if eq_d is None or eq_h is None: return None
     return dict(time_utc=HB.ts_of(now_ms), equity_usd=round(eq_d + eq_h, 4), donchian_usd=round(eq_d, 4), hbo_usd=round(eq_h, 4))
 
+def write_daily(base, rows, now_ms, say):
+    """Persist the daily-close snapshot (00:00 UTC) of every completed UTC day from the hourly equity rows (nearest observation to the boundary)."""
+    meta = read_json(os.path.join(base, 'combined', 'meta.json')); p = os.path.join(base, 'combined', 'daily.csv')
+    have = {x['date'] for x in csv.DictReader(open(p))} if os.path.exists(p) else set()
+    start = pd.Timestamp(meta['start_utc']).floor('D'); today = pd.Timestamp(now_ms, unit='ms').floor('D')
+    xf = list(csv.DictReader(open(os.path.join(base, 'combined', 'transfers.csv')))) if os.path.exists(os.path.join(base, 'combined', 'transfers.csv')) else []
+    ts = [pd.Timestamp(x['time_utc']) for x in rows]; new = []
+    for D in pd.date_range(start, today - pd.Timedelta(days=1), freq='D'):
+        ds = D.strftime('%Y-%m-%d')
+        if ds in have: continue
+        b = D + pd.Timedelta(days=1)
+        if not rows or ts[-1] < b: continue
+        i = min(range(len(rows)), key=lambda k: abs((ts[k] - b).total_seconds())); x = rows[i]
+        cum = sum((1 if t['moved_to'] == 'Donchian' else -1) * float(t['usd']) for t in xf if pd.Timestamp(t['time_utc']) <= ts[i])
+        new.append(dict(date=ds, snapshot_time_utc=x['time_utc'], equity_usd=x['equity_usd'], donchian_usd=x['donchian_usd'], hbo_usd=x['hbo_usd'],
+                        donchian_transfers=round(cum, 2), hbo_transfers=round(-cum, 2)))
+    if new:
+        HL.append_csv(p, ['date', 'snapshot_time_utc', 'equity_usd', 'donchian_usd', 'hbo_usd', 'donchian_transfers', 'hbo_transfers'], new)
+        say(f"Daily snapshots written: {', '.join(n['date'] for n in new)}")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--data-dir', default=os.path.join(HERE, '..', 'data'))
@@ -88,10 +108,12 @@ def main():
     if row:
         p = os.path.join(base, 'combined', 'equity.csv'); rows = list(csv.DictReader(open(p))) if os.path.exists(p) else []
         if rows and rows[-1]['time_utc'][:13] == row['time_utc'][:13]: rows = rows[:-1]
+        seen = set(); rows = [x for x in rows if not (x['time_utc'] in seen or seen.add(x['time_utc']))]
         rows.append(row)
         with open(p + '.tmp', 'w', newline='') as fh:
             w = csv.DictWriter(fh, fieldnames=list(row)); w.writeheader(); [w.writerow(x) for x in rows]
         os.replace(p + '.tmp', p)
+        write_daily(base, rows, now_ms, say)
         say(f"Combined equity US$ {row['equity_usd']:.2f} (Donchian {row['donchian_usd']:.2f} | HBO {row['hbo_usd']:.2f})")
     if not a.no_site:
         import site_build

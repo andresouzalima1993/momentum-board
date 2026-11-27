@@ -33,7 +33,7 @@ def brt_str(s):
     d = to_brt(s); return d.strftime('%d %b %H:%M') if d else s
 
 # ---------- charts ----------
-def svg_lines(series, w=1000, h=250, baseline=None, vline=None):
+def svg_lines(series, w=1000, h=250, baseline=None, vline=None, ydec=0):
     """series: list of (name, color, [(label, value)]). Shared x positions by index of the longest series."""
     allv = [v for _, _, pts in series for _, v in pts]
     if not allv: return ''
@@ -47,7 +47,7 @@ def svg_lines(series, w=1000, h=250, baseline=None, vline=None):
     o = [f'<svg class="chart" viewBox="0 0 {w} {h}" preserveAspectRatio="none" role="img">']
     for k in range(5):
         v = lo + (hi - lo) * k / 4; y = Y(v)
-        o.append(f'<line x1="{L}" x2="{w-R}" y1="{y:.1f}" y2="{y:.1f}" stroke="#e5e8ef"/><text x="{L-6}" y="{y+4:.1f}" text-anchor="end" font-size="11" fill="#6b7289">{v:,.0f}</text>')
+        o.append(f'<line x1="{L}" x2="{w-R}" y1="{y:.1f}" y2="{y:.1f}" stroke="#e5e8ef"/><text x="{L-6}" y="{y+4:.1f}" text-anchor="end" font-size="11" fill="#6b7289">{v:,.{ydec}f}</text>')
     if baseline is not None:
         y = Y(baseline); o.append(f'<line x1="{L}" x2="{w-R}" y1="{y:.1f}" y2="{y:.1f}" stroke="#9aa3b5" stroke-dasharray="4 4"/>')
     if vline:
@@ -82,7 +82,40 @@ def table(head, rows, empty='None yet'):
     return f'<div class="table-wrap"><table><thead><tr>{h}</tr></thead><tbody>{b}</tbody></table></div>'
 def td(v, c='', l=False): return f'<td class="{("l " if l else "")}{c}">{v}</td>'
 
-def build(base, now_ms, info=None, mids=None):
+def daily_rows(base, START_CAP):
+    """Daily-close snapshots (00:00 UTC) persisted by the runner, turned into P&L / NAV rows. Sleeve P&L excludes internal transfers."""
+    snaps = rcsv(os.path.join(base, 'combined', 'daily.csv')); out = []
+    prev_eq = START_CAP; prev_d = prev_h = START_CAP / 2
+    for r in snaps:
+        eq = f(r['equity_usd']); d = f(r['donchian_usd']) - f(r['donchian_transfers']); h = f(r['hbo_usd']) - f(r['hbo_transfers'])
+        out.append(dict(date=r['date'], eq=eq, pnl=eq - prev_eq, dret=(eq / prev_eq - 1) * 100, nav=eq / START_CAP, cum=(eq / START_CAP - 1) * 100,
+                        dpnl=d - prev_d, hpnl=h - prev_h, intraday=False, snap=r.get('snapshot_time_utc', '')))
+        prev_eq, prev_d, prev_h = eq, d, h
+    return out, prev_eq, prev_d, prev_h
+
+def daily_section(base, ceq, tot, last, START_CAP, xfers, now):
+    rows, prev_eq, prev_d, prev_h = daily_rows(base, START_CAP)
+    today = now.strftime('%Y-%m-%d')
+    if last:
+        xd = sum((1 if x['moved_to'] == 'Donchian' else -1) * f(x['usd']) for x in xfers)
+        d = f(last['donchian_usd']) - xd; h = f(last['hbo_usd']) + xd
+        rows.append(dict(date=today, eq=tot, pnl=tot - prev_eq, dret=(tot / prev_eq - 1) * 100, nav=tot / START_CAP, cum=(tot / START_CAP - 1) * 100,
+                         dpnl=d - prev_d, hpnl=h - prev_h, intraday=True, snap=''))
+    body = []
+    for r in reversed(rows):
+        lab = f"{r['date']} <span class=\"badge badge-blue\">intraday</span>" if r['intraday'] else r['date']
+        body.append('<tr>' + td(lab, l=True) + td(usd(r['eq'])) + td(usd(r['pnl'], True), cls(r['pnl'])) + td(pct(r['dret']), cls(r['dret']))
+                    + td(f"<b>{r['nav']:.4f}</b>") + td(pct(r['cum']), cls(r['cum'])) + td(usd(r['dpnl'], True), cls(r['dpnl'])) + td(usd(r['hpnl'], True), cls(r['hpnl'])) + '</tr>')
+    o = ['<section class="panel"><h2>Daily P&amp;L and NAV per unit</h2><p class="section-sub">One row per UTC day, from the daily close snapshot (00:00 UTC = 21:00 BRT) of the hourly equity. '
+         'NAV per unit starts at 1.0000 and equals equity ÷ US$ 10,000.00 of initial units; there are no deposits or withdrawals, and the monthly rebalance between sleeves is an internal transfer, so it never changes NAV. '
+         'Sleeve P&amp;L also excludes that transfer. The current day is partial (intraday) and is measured against the last daily close.</p>']
+    pts = [(r['date'][5:] + (' *' if r['intraday'] else ''), r['nav']) for r in rows]
+    if len(pts) > 1: o.append(svg_lines([('NAV per unit', '#0f1f4b', pts)], h=190, baseline=1.0, ydec=4))
+    o.append(table(['Date (UTC)', 'Equity', 'Daily P&L', 'Daily return', 'NAV per unit', 'Cumulative return', 'Donchian P&L', 'HBO P&L'], body, 'Waiting for the first run.'))
+    o.append('</section>')
+    return ''.join(o)
+
+def build(base, now_ms, info=None, mids=None, page='live'):
     now = datetime.fromtimestamp(now_ms / 1000, timezone.utc); now_brt = now.astimezone(BRT); info = info or {}; mids = mids or {}
     meta = rjson(os.path.join(base, 'combined', 'meta.json')) or {}
     dn = rjson(os.path.join(base, 'donchian', 'state.json')); hs = rjson(os.path.join(base, 'hbo', 'state.json'))
@@ -100,6 +133,7 @@ def build(base, now_ms, info=None, mids=None):
 .rules { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; } .rules li { margin-bottom: 4px; } .rules b { color: var(--navy); }
 .empty-row td { color: var(--muted); text-align: left; font-style: italic; }
 svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); margin: 16px 0 4px; }
+.tabs-nav { display:flex; gap:6px; padding: 0 24px; margin: 12px auto 0; max-width: 1180px; } .tabs-nav a { padding: 8px 18px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--navy); font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: .02em; } .tabs-nav a.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .legend { display:flex; gap:16px; font-size:12px; color: var(--muted); margin-top:6px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; }
 """
     # ---- numbers ----
@@ -132,13 +166,15 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
     status = (f'Hourly runner (GitHub Actions) · last run {last_run.strftime("%d %b %Y, %H:%M") if last_run else "—"} BRT · HBO: last closed hourly bar processed up to {hb_s} UTC · '
               f'Donchian: last daily close processed {dlp} (00:00 UTC = 21:00 BRT). Missed hours and days are caught up one by one on the next run, so no trade is lost.')
     H = ['<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-         '<meta name="robots" content="noindex,nofollow"><title>Momentum paper portfolio · 50/50 combo</title>'
+         '<meta name="robots" content="noindex,nofollow"><title>Momentum paper portfolio · ' + ('Backtest' if page == 'backtest' else '50/50 combo') + '</title>'
          '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
          '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">'
          f'<style>{css}{extra}</style></head><body>',
          '<header class="top"><div class="crumb">Paper trading <span class="sep">/</span> <b>Momentum board</b></div><div class="top-right">'
          '<span class="badge badge-gray">Read-only</span><span class="badge badge-gray">Paper</span>'
-         f'<span class="badge {badge[0]}">{badge[1]}</span><span class="clock">Updated {now_brt.strftime("%d %b %Y, %H:%M")} BRT</span></div></header><main class="shell">']
+         f'<span class="badge {badge[0]}">{badge[1]}</span><span class="clock">Updated {now_brt.strftime("%d %b %Y, %H:%M")} BRT</span></div></header>'
+         '<nav class="tabs-nav"><a href="index.html"' + (' class="active"' if page == 'live' else '') + '>Live portfolio</a>'
+         '<a href="backtest.html"' + (' class="active"' if page == 'backtest' else '') + '>Backtest</a></nav><main class="shell">']
     H.append('<section class="intro"><h2>50/50 combo: daily trend + hourly breakout</h2><p>Two strategies share one simulated Hyperliquid account of US$ 10,000.00: '
              '<b>Donchian 55</b> (daily trend following, US$ 5,000.00 sleeve) and the <b>HBO ensemble</b> (hourly volume-spike breakout, US$ 5,000.00 sleeve). '
              'Capital is rebalanced back to 50/50 once a month. Everything is simulated from public prices: no orders are sent and no wallet or key is used.</p></section>')
@@ -154,6 +190,7 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
         H.append('<h3>Sleeves</h3><p class="section-sub">Each sleeve is a separate ledger. Donchian moves once a day; HBO moves every hour.</p>')
         H.append(svg_lines([('Donchian 55 sleeve', '#1b7a78', downsample(ceq, 'donchian_usd')), ('HBO ensemble sleeve', '#5a4fbf', downsample(ceq, 'hbo_usd'))]))
     H.append('</section>')
+    H.append(daily_section(base, ceq, tot, last, START_CAP, xfers, now))
     # ---- ledger ----
     dn_eq = f(last['donchian_usd']) if last else 5000.0
     hb_eq = f(last['hbo_usd']) if last else 5000.0
@@ -236,6 +273,7 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
              '<li><b>Execution realism.</b> Fills use the live mid plus real order-book Slippage (HBO: the larger of the real book and a 3/4/6 bp assumption by liquidity rank). Donchian assumes 70% maker fills at 0.015% and 30% taker at 0.045%; HBO is all taker at 0.045%. Sizes respect each coin\'s size decimals, the US$ 10 minimum order and per-coin maximum Leverage (initial margin ≤ 80% of equity). Stale data stops the run.</li>'
              '<li><b>Funding.</b> Real hourly Hyperliquid funding is charged on every open position (shorts receive when the rate is positive).</li>'
              '<li><b>Rebalance.</b> Once a month the two sleeves are reset to 50/50 by moving virtual cash (no trading cost).</li></ul></section>')
+    LIVE_END = len(H)
     # ---- backtest ----
     rows_ref = {r['key']: r for r in ref.get('rows', [])}
     if rows_ref:
@@ -269,10 +307,14 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
              '<li><b>Costs and funding.</b> Both legs include real hourly funding. Doubling costs, doubling funding and delaying HBO fills are in the table above.</li>'
              '<li><b>Combo.</b> The earlier figure assumed free daily rebalancing and a hypothetical 4% yield on idle cash for the Donchian leg only. Both were removed in the base case.</li>'
              '<li><b>Live engine.</b> The HBO paper engine replays the backtest bar by bar with identical results (difference below US$ 0.000001 over 4,272 hourly bars on Hyperliquid candles).</li></ul></section>')
+    if page == 'live': H = H[:LIVE_END]
+    else:
+        H = H[:2] + ['<section class="intro"><h2>Backtest evidence</h2><p>Historical simulation of the same rules as the live portfolio. This is research evidence, not live results. The live paper portfolio is on the first tab.</p></section>'] + H[LIVE_END:]
     H.append('</main><footer class="foot">Paper simulation for research only, not investment advice. Data: Hyperliquid public info API (candles, mids, order books and funding history). '
              'Times in BRT (America/Sao_Paulo); daily candles close at 00:00 UTC = 21:00 BRT. Past and simulated results do not guarantee future results.</footer></body></html>')
     return ''.join(H)
 
 def build_to(base, out, now_ms, info=None, mids=None):
-    page = build(base, now_ms, info, mids)
-    tmp = out + '.tmp'; open(tmp, 'w', encoding='utf-8').write(page); os.replace(tmp, out)
+    for pg, path in (('live', out), ('backtest', os.path.join(os.path.dirname(out), 'backtest.html'))):
+        page = build(base, now_ms, info, mids, pg)
+        tmp = path + '.tmp'; open(tmp, 'w', encoding='utf-8').write(page); os.replace(tmp, path)
