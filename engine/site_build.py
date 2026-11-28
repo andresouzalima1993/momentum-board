@@ -166,7 +166,7 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
     status = (f'Hourly runner (GitHub Actions) · last run {last_run.strftime("%d %b %Y, %H:%M") if last_run else "—"} BRT · HBO: last closed hourly bar processed up to {hb_s} UTC · '
               f'Donchian: last daily close processed {dlp} (00:00 UTC = 21:00 BRT). Missed hours and days are caught up one by one on the next run, so no trade is lost.')
     H = ['<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-         '<meta name="robots" content="noindex,nofollow"><title>Momentum paper portfolio · ' + ('Backtest' if page == 'backtest' else '50/50 combo') + '</title>'
+         '<meta name="robots" content="noindex,nofollow"><title>Momentum paper portfolio · ' + ('Backtest' if page == 'backtest' else 'Meme Desk' if page == 'meme' else '50/50 combo') + '</title>'
          '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
          '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">'
          f'<style>{css}{extra}</style></head><body>',
@@ -174,6 +174,7 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
          '<span class="badge badge-gray">Read-only</span><span class="badge badge-gray">Paper</span>'
          f'<span class="badge {badge[0]}">{badge[1]}</span><span class="clock">Updated {now_brt.strftime("%d %b %Y, %H:%M")} BRT</span></div></header>'
          '<nav class="tabs-nav"><a href="index.html"' + (' class="active"' if page == 'live' else '') + '>Live portfolio</a>'
+         '<a href="meme.html"' + (' class="active"' if page == 'meme' else '') + '>Meme Desk</a>'
          '<a href="backtest.html"' + (' class="active"' if page == 'backtest' else '') + '>Backtest</a></nav><main class="shell">']
     H.append('<section class="intro"><h2>50/50 combo: daily trend + hourly breakout</h2><p>Two strategies share one simulated Hyperliquid account of US$ 10,000.00: '
              '<b>Donchian 55</b> (daily trend following, US$ 5,000.00 sleeve) and the <b>HBO ensemble</b> (hourly volume-spike breakout, US$ 5,000.00 sleeve). '
@@ -308,6 +309,11 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
              '<li><b>Combo.</b> The earlier figure assumed free daily rebalancing and a hypothetical 4% yield on idle cash for the Donchian leg only. Both were removed in the base case.</li>'
              '<li><b>Live engine.</b> The HBO paper engine replays the backtest bar by bar with identical results (difference below US$ 0.000001 over 4,272 hourly bars on Hyperliquid candles).</li></ul></section>')
     if page == 'live': H = H[:LIVE_END]
+    elif page == 'meme':
+        from meme_tab import MEME_SECTION
+        H = H[:2] + [MEME_SECTION]
+        H.append('</main><footer class="foot">Paper simulation for research only, not investment advice. Meme desk data: DEX Screener, GeckoTerminal, RugCheck and GoPlus public APIs; no wallet, key or order is used. Times in BRT (America/Sao_Paulo).</footer></body></html>')
+        return ''.join(H)
     else:
         H = H[:2] + ['<section class="intro"><h2>Backtest evidence</h2><p>Historical simulation of the same rules as the live portfolio. This is research evidence, not live results. The live paper portfolio is on the first tab.</p></section>'] + H[LIVE_END:]
     H.append('</main><footer class="foot">Paper simulation for research only, not investment advice. Data: Hyperliquid public info API (candles, mids, order books and funding history). '
@@ -315,6 +321,6 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
     return ''.join(H)
 
 def build_to(base, out, now_ms, info=None, mids=None):
-    for pg, path in (('live', out), ('backtest', os.path.join(os.path.dirname(out), 'backtest.html'))):
+    for pg, path in (('live', out), ('meme', os.path.join(os.path.dirname(out), 'meme.html')), ('backtest', os.path.join(os.path.dirname(out), 'backtest.html'))):
         page = build(base, now_ms, info, mids, pg)
         tmp = path + '.tmp'; open(tmp, 'w', encoding='utf-8').write(page); os.replace(tmp, path)

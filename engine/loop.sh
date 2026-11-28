@@ -9,9 +9,9 @@ say() { echo "$(date -u '+%F %T') UTC | loop: $*"; }
 iteration() {
   git pull -q --rebase origin main || say "pull failed (continuing)"
   python engine/run_all.py || say "run_all exit code $? (continuing)"
-  if ! python engine/guard.py; then say "GUARD REFUSED: not publishing this iteration"; git checkout -q -- index.html backtest.html 2>/dev/null; return; fi
+  if ! python engine/guard.py; then say "GUARD REFUSED: not publishing this iteration"; git checkout -q -- index.html backtest.html meme.html 2>/dev/null; return; fi
   printf 'User-agent: *\nDisallow: /\n' > robots.txt; : > .nojekyll
-  git add data index.html backtest.html robots.txt .nojekyll
+  git add data index.html meme.html backtest.html robots.txt .nojekyll
   if git diff --cached --quiet; then say "nothing to commit"; return; fi
   git commit -q -m "paper run $(date -u '+%Y-%m-%d %H:%M') UTC"
   for i in 1 2 3 4; do

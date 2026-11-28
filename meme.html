@@ -1,0 +1,519 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Momentum paper portfolio · Meme Desk</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"><style>
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --navy: #0f1f4b;
+  --navy-soft: #1c2e62;
+  --text: #0f1f4b;
+  --muted: #6b7289;
+  --muted-2: #8b93a7;
+  --line: #e5e8ef;
+  --line-strong: #d5dae6;
+  --green: #128a4b;
+  --green-bg: #e8f7ee;
+  --red: #c63b3b;
+  --red-bg: #fdecec;
+  --blue: #2c5aa0;
+  --blue-bg: #e8eef9;
+  --gray-bg: #eef0f4;
+  --gray-text: #4b5568;
+  --chart-e: #0f1f4b;
+  --chart-c: #1b7a78;
+  --chart-t: #5a4fbf;
+  --chart-old: #9aa3b5;
+  --radius: 10px;
+  --font: "Outfit", "Lexend", "Poppins", "Segoe UI", sans-serif;
+  --max: 1240px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body { min-height: 100vh; }
+.num, table td:not(.l), .kpi .v, .perf td:not(.l), .cal .v {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Header */
+.top {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.crumb {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+.crumb b { color: var(--navy); font-weight: 600; }
+.crumb .sep { margin: 0 6px; color: var(--muted-2); }
+.top-right {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.clock { color: var(--muted); font-size: 12px; font-weight: 500; }
+
+/* Badges — small, like BUY/SELL/DARK/BLUE */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.badge-gray { background: var(--gray-bg); color: var(--gray-text); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-navy { background: var(--navy); color: #fff; }
+
+.banner-lacuna {
+  display: none;
+  background: var(--red-bg);
+  color: var(--red);
+  border-bottom: 1px solid #f3c4c4;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.banner-lacuna.on { display: block; }
+
+/* Hero / intro */
+.shell { max-width: var(--max); margin: 0 auto; padding: 28px 24px 64px; }
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--navy);
+  line-height: 1.2;
+}
+.hero .lede {
+  margin: 0 0 18px;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 400;
+}
+.intro {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 16px;
+  margin-bottom: 22px;
+}
+.intro h2, .panel h2, .book h2, .section-title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+.intro p, .note, .section-sub, .book .lede, .rule-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+.rule-note { margin: 12px 0 0; font-size: 12px; }
+.intro p:last-child, .note:last-child { margin-bottom: 0; }
+
+/* Three books */
+.books {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 0 0 28px;
+}
+@media (min-width: 1080px) {
+  .books { grid-template-columns: repeat(3, 1fr); }
+}
+.book {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.book.starting { background: #fbfcfd; }
+.book-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.book h2 { font-size: 14px; margin: 0; }
+.book .lede { margin: 0; }
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+.kpi .k {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.kpi .v {
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  word-break: break-word;
+}
+.kpi .d { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.kpi.up .v, .pos { color: var(--green); }
+.kpi.down .v, .neg { color: var(--red); }
+.starting-box {
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  padding: 16px;
+  color: var(--muted);
+  font-size: 13px;
+  background: #fafbfc;
+}
+
+/* Performance mini-table inside a book */
+.perf { width: 100%; border-collapse: collapse; font-size: 12px; }
+.perf th, .perf td {
+  border-bottom: 1px solid var(--line);
+  padding: 6px 0;
+  text-align: right;
+  white-space: nowrap;
+}
+.perf th {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: right;
+}
+.perf th.l, .perf td.l, th.l, td.l { text-align: left; }
+.perf tr:last-child td { border-bottom: 0; font-weight: 600; }
+
+/* Panels */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 16px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.panel .head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.meta { color: var(--muted); font-size: 12px; }
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (min-width: 900px) {
+  .split-2 { grid-template-columns: 1fr 1fr; }
+  .split-3 { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* Tables */
+.day-table-wrap, .table-wrap { overflow: auto; margin-top: 8px; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 10px;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--text);
+}
+th {
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: right;
+  cursor: default;
+  user-select: none;
+  background: transparent;
+}
+th[data-k] { cursor: pointer; }
+tr:hover td { background: #f7f8fb; }
+.props { display: grid; grid-template-columns: 160px 1fr; gap: 6px 14px; font-size: 13px; margin-bottom: 10px; }
+.props b { color: var(--navy); font-weight: 600; font-size: 12px; }
+@media (max-width: 640px) {
+  .props { grid-template-columns: 1fr; gap: 2px; }
+  .kpi .v { font-size: 20px; }
+  .hero h1 { font-size: 22px; }
+  .shell { padding: 20px 14px 48px; }
+  .top { padding: 10px 14px; }
+}
+
+/* Tabs / controls */
+.controls, .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 4px;
+  align-items: center;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0;
+}
+.controls button, .tabs button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.controls button.active, .tabs button.active {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+.controls input, .controls select {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--navy);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin: 4px 4px 8px 0;
+}
+input[type=number] { width: 88px; }
+
+/* Charts */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 12px;
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-radius: 1px;
+}
+svg.chart, .cota-chart, .day-chart {
+  width: 100%;
+  height: 220px;
+  background: #fbfcfe;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: block;
+}
+.cota-chart { height: 180px; margin-bottom: 8px; }
+.day-chart { height: 200px; }
+
+/* Calendar */
+.cal-wrap { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 8px; }
+@media (min-width: 900px) {
+  .cal-wrap { grid-template-columns: repeat(3, 1fr); }
+}
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal .hd {
+  color: var(--muted);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 4px 0;
+}
+.cal .cell {
+  background: #f6f7fa;
+  border-radius: 6px;
+  padding: 5px 2px;
+  text-align: center;
+  min-height: 54px;
+}
+.cal .cell .d { color: var(--muted); font-size: 10px; }
+.cal .cell .v { font-weight: 650; font-size: 11px; }
+.cal .cell.up { background: var(--green-bg); }
+.cal .cell.down { background: var(--red-bg); }
+.cal .cell.partial { outline: 1px dashed var(--muted-2); }
+.cal .empty { background: transparent; min-height: 54px; }
+.star { color: var(--muted); font-weight: 600; }
+
+.foot {
+  color: var(--muted);
+  font-size: 12px;
+  max-width: var(--max);
+  margin: 8px auto 0;
+  padding: 0 24px 40px;
+  line-height: 1.55;
+}
+
+/* Period chips (asset P&L filter) */
+.period-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 12px;
+}
+.chip {
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.3;
+}
+.chip.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+.period-bar .range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.period-bar input[type=date] {
+  font-family: inherit;
+  font-size: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 4px 6px;
+  color: var(--navy);
+  background: #fff;
+}
+.leaders-mini { max-height: 200px; overflow: auto; margin-top: 4px; }
+.leaders-mini table { font-size: 11.5px; }
+.all-days { margin: 0 0 16px; }
+table.days-all { font-size: 12px; }
+table.days-all th, table.days-all td { padding: 7px 7px; }
+table.days-all thead tr:first-child th { border-bottom: 0; text-align: center; letter-spacing: .05em; }
+
+.period-bar .sep { width:1px; height:18px; background:var(--line-strong); margin:0 2px; align-self:center; }
+.period-bar .presets { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+
+
+.status-line { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; margin: 0 0 16px; font-size: 13.5px; color: var(--navy); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.kpi-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 0 0 16px; }
+@media (min-width: 760px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1080px) { .kpi-row { grid-template-columns: repeat(6, 1fr); } }
+.rules { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; } .rules li { margin-bottom: 4px; } .rules b { color: var(--navy); }
+.empty-row td { color: var(--muted); text-align: left; font-style: italic; }
+svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); margin: 16px 0 4px; }
+.tabs-nav { display:flex; gap:6px; padding: 0 24px; margin: 12px auto 0; max-width: 1180px; } .tabs-nav a { padding: 8px 18px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--navy); font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: .02em; } .tabs-nav a.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.legend { display:flex; gap:16px; font-size:12px; color: var(--muted); margin-top:6px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; }
+</style></head><body><header class="top"><div class="crumb">Paper trading <span class="sep">/</span> <b>Momentum board</b></div><div class="top-right"><span class="badge badge-gray">Read-only</span><span class="badge badge-gray">Paper</span><span class="badge badge-green">Running</span><span class="clock">Updated 27 Nov 2026, 22:33 BRT</span></div></header><nav class="tabs-nav"><a href="index.html">Live portfolio</a><a href="meme.html" class="active">Meme Desk</a><a href="backtest.html">Backtest</a></nav><main class="shell">
+<style>
+.md-banner{background:#0f1f4b;color:#fff;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0 0 16px}
+.md-p{color:#128a4b}.md-n{color:#c63b3b}.md-m{color:#6b7289}
+.md-report{background:#0f1f4b;color:#e9edf7;border-radius:8px;padding:14px 16px;font-size:12.5px;white-space:pre-wrap;margin:0;font-family:ui-monospace,Menlo,Consolas,monospace}
+.md-funnel{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}.md-step{flex:1;min-width:110px;border:1px solid #e5e8ef;border-radius:8px;padding:8px 10px;background:#fff}
+.md-step .k{font-size:11px;color:#6b7289;text-transform:uppercase;letter-spacing:.05em}.md-step .v{font-size:18px;font-weight:650}
+#md-root table td,#md-root table th{white-space:nowrap}
+</style>
+<div id="md-root">
+<div class="md-banner">Paper simulation · no wallet, no keys, no real orders · Solana memecoins · public read-only data</div>
+<section class="intro"><h2>Meme desk: on-chain memecoins, four paper books</h2><p>A desk of coded "seats" scans new Solana pools every 5 minutes (SEARCH), checks contract and rug risk (RISK, WHALE),
+measures order flow and pool depth (FLOW, LIQUIDITY), and a JUDGE answers four closed questions with a fixed buy gate. The same buy signals feed four separate paper books:
+<b>MOMO</b> enters right after the verdict, <b>DIP</b> waits for a 15% pullback; <b>CONS</b> starts with US$ 1,000 and risks 1.5% per trade, <b>LADDER</b> starts with US$ 100,
+bets big while small and de-risks as it grows. Goal of LADDER: a high multiple on a small bank, accepting a real chance of losing it.</p>
+<p class="section-sub" id="md-status">Loading live data…</p></section>
+<section class="panel"><h2>Books</h2><p class="section-sub">Multiple = (trading bank + locked profits) ÷ start. Unrealized P&amp;L is at liquidation value (after price impact, DEX fee and network fee). Drawdown is peak-to-trough of the total bank.</p><div class="table-wrap"><table id="md-books"></table></div></section>
+<section class="panel"><h2>Growth, ruin and sample size</h2><p class="section-sub">How likely each book is to multiply or go to zero, from a bootstrap of its own closed trades through its sizing rules (100 trades). Median vs mean shows how much a few big winners carry the average. Under 30 trades the numbers are noise.</p><div class="table-wrap"><table id="md-growth"></table></div></section>
+<section class="panel"><h2>De-risking ladder</h2><p class="section-sub">LADDER books: 30% of the bank per entry up to 3x, tapering to 6% by 10x, then the conservative rules. At each doubling 33% of the new gains are locked and never traded.</p><div class="table-wrap"><table id="md-ladder"></table></div><p class="section-sub" id="md-rungs"></p></section>
+<section class="panel"><h2>Open positions</h2><p class="section-sub">Exits run on 1-minute bars: stop first if a bar hits both, gap-through fills, 1% slippage plus pool impact; liquidity gone = −100%; a top holder selling &gt;8% of supply in ~5 min triggers a whale exit.</p><div class="table-wrap"><table id="md-open"></table></div></section>
+<section class="panel"><h2>Today's desk report</h2><p class="section-sub">The BRT day closes at midnight.</p><pre class="md-report" id="md-report"></pre></section>
+<section class="panel"><h2>Leads funnel</h2><p class="section-sub">Today (BRT) and since the start of this version. Every lead needs an on-chain reason; one RISK hard fail kills it.</p><div class="md-funnel" id="md-f-today"></div><div class="md-funnel" id="md-f-all"></div></section>
+<section class="panel"><h2>Calibration summary</h2><p class="section-sub">Buy confidence buckets vs results, and what happened to the leads the desk turned down (24h shadow trade with the same exit rules).</p><div class="table-wrap"><table id="md-cal"></table></div><div class="table-wrap"><table id="md-groups"></table></div></section>
+<section class="panel"><h2>Recent trades</h2><p class="section-sub">Closed paper trades, after all modeled costs.</p><div class="table-wrap"><table id="md-trades"></table></div></section>
+<p class="section-sub">Full desk with the verdict log: <a href="https://andresouzalima1993.github.io/meme-desk-sim/">meme-desk-sim</a>. Times in BRT.</p>
+</div>
+<script>
+(function(){
+  var SRC='/meme-desk-sim/desk.json';
+  function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined&&x!==null)e.textContent=String(x);return e;}
+  function n2(x,d){if(x===null||x===undefined||isNaN(x))return '–';return Number(x).toLocaleString('en-US',{minimumFractionDigits:d===undefined?2:d,maximumFractionDigits:d===undefined?2:d});}
+  function usd(x,s){if(x===null||x===undefined)return '–';var v=Number(x);return (s&&v>0?'+':'')+(v<0?'−':'')+'US$ '+n2(Math.abs(v));}
+  function pc(x,s){if(x===null||x===undefined)return '–';var v=Number(x);return (s!==false&&v>0?'+':'')+n2(v,1)+'%';}
+  function tone(v){return v>0?'md-p':(v<0?'md-n':'');}
+  function fill(id,head,rows,empty){var t=document.getElementById(id);t.textContent='';var th=el('thead'),tr=el('tr');
+    head.forEach(function(h,i){var c=el('th',i===0?'l':'',h);tr.appendChild(c);});th.appendChild(tr);t.appendChild(th);var tb=el('tbody');
+    if(!rows.length){var r=el('tr','empty-row'),c=el('td','',empty||'None yet');c.colSpan=head.length;r.appendChild(c);tb.appendChild(r);}
+    rows.forEach(function(r){var tr=el('tr');r.forEach(function(c,i){var cell=(typeof c==='object'&&c!==null)?c:{v:c};tr.appendChild(el('td',(i===0?'l ':'')+(cell.c||''),cell.v));});tb.appendChild(tr);});t.appendChild(tb);}
+  function funnel(id,arr){var d=document.getElementById(id);d.textContent='';arr.forEach(function(p){var s=el('div','md-step');s.appendChild(el('div','k',p[0]));s.appendChild(el('div','v',n2(p[1],0)));d.appendChild(s);});}
+  fetch(SRC+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(J){
+    document.getElementById('md-status').textContent=(J.healthy?'Runner healthy':'Runner stale')+' · data updated '+J.generated_brt+' BRT · last full cycle '+(J.last_cycle_brt||'–')+' BRT · running since '+J.started_brt+' BRT · refreshed every 10 min';
+    fill('md-books',['Book','Start','Trading bank','Locked','Multiple','Max multiple','Return','Realized P&L','Unrealized P&L','Max drawdown','Trades','Win rate','Open','Sizing now'],
+      J.books.map(function(b){var s=b.stats;return [b.name,usd(b.start),usd(b.trading),usd(b.locked),{v:n2(b.multiple)+'x',c:tone(b.multiple-1)},n2(b.max_multiple)+'x',{v:pc(b.return_pct),c:tone(b.return_pct)},
+        {v:usd(b.realized,true),c:tone(b.realized)},{v:usd(b.unrealized,true),c:tone(b.unrealized)},{v:(b.max_dd_pct?'−':'')+n2(b.max_dd_pct,1)+'%',c:b.max_dd_pct?'md-n':''},s.n,
+        s.n?n2(100*s.win_rate,0)+'%':'–',b.open+'/'+b.max_open+(b.pending?' (+'+b.pending+' waiting)':''),b.rung+' · '+n2(b.size_now_pct,1)+'% ('+usd(b.size_now_usd)+')'+(b.halted?' · HALTED':'')+(b.ruined?' · RUINED':'')];}));
+    fill('md-growth',['Book','Closed','Mean trade','Median trade','Top-3 share of profit','90% CI mean P&L/trade','P(ruin)','Median multiple','Mean multiple','P(≥10x)','Read'],
+      J.books.map(function(b){var s=b.stats,r=b.ruin;return [b.name,s.n,pc(s.mean_ret_pct),pc(s.median_ret_pct),s.top3_share!=null&&s.top3_share!==undefined?n2(100*s.top3_share,0)+'%':'–',
+        s.n?usd(s.ci90_mean_pnl[0],true)+' … '+usd(s.ci90_mean_pnl[1],true):'–',r.ok?n2(100*r.p_ruin,0)+'%':'–',r.ok?n2(r.median_x)+'x':'–',r.ok?n2(r.mean_x)+'x':'–',r.ok?n2(100*r.p_10x,0)+'%':'–',s.n?s.verdict:(r.why||'no closed trades yet')];}));
+    fill('md-ladder',['Rung','Multiple','Size per entry','Max open','Daily loss limit','Exits'],J.ladder.rungs.map(function(r){return [r.name,r.from_x+'x – '+(r.to_x?r.to_x+'x':'∞'),
+        r.frac_start!==undefined?n2(100*r.frac_start,0)+'% → '+n2(100*r.frac_end,0)+'% of trading bank':'1.5% risk ÷ 30% stop (≈5% of bank)',r.max_open,n2(100*r.daily_loss,0)+'%',r.exits==='RUNNER'?'runner (25% at 3x, trail 40%, 15% moonbag)':'conservative'];}));
+    document.getElementById('md-rungs').textContent=J.books.filter(function(b){return b.profile==='LADDER';}).map(function(b){return b.name+': '+b.rung+' at '+n2(b.multiple)+'x, trading '+usd(b.trading)+', locked '+usd(b.locked)+', next lock at '+usd(b.next_lock);}).join(' · ');
+    fill('md-open',['Book','Token','Entry','Size','Return','Liq. value','Unrealized P&L','Stage'],J.open_positions.map(function(p){return [p.book,p.symbol,p.entry_brt,usd(p.size),{v:pc(p.ret_pct),c:tone(p.ret_pct)},usd(p.liq_value),{v:usd(p.unrealized,true),c:tone(p.unrealized)},p.stage];}),'No open positions');
+    document.getElementById('md-report').textContent=J.report;
+    funnel('md-f-today',J.funnel_today);funnel('md-f-all',J.funnel_all);
+    fill('md-cal',['Buy p bucket','Buy signals','Closed (MOMO-CONS)','Win rate','24h checked','Shadow green'],J.calibration.buckets.map(function(r){return [r.bucket,r.signals,r.closed,r.closed?n2(100*r.wins/r.closed,0)+'%':'–',r.o24,r.o24?n2(100*r.green24/r.o24,0)+'%':'–'];}));
+    var G=J.calibration.groups;fill('md-groups',['Turned-down group','Resolved','Shadow green','Dead in 24h','Median shadow'],Object.keys(G).map(function(k){var g=G[k];return [k,g.n,g.n?n2(100*g.green/g.n,0)+'%':'–',g.n?n2(100*g.dead/g.n,0)+'%':'–',pc(g.med)];}));
+    fill('md-trades',['Book','Token','Exit','Reason','Cost','Return','Realized P&L'],J.recent_trades.map(function(t){return [t.book,t.symbol,t.exit_brt,t.reason,usd(t.cost),{v:pc(t.ret_pct),c:tone(t.ret_pct)},{v:usd(t.pnl,true),c:tone(t.pnl)}];}),'No closed trades yet');
+  }).catch(function(){document.getElementById('md-status').textContent='Live data unavailable right now (the desk runner publishes every 10 minutes).';});
+})();
+</script>
+</main><footer class="foot">Paper simulation for research only, not investment advice. Meme desk data: DEX Screener, GeckoTerminal, RugCheck and GoPlus public APIs; no wallet, key or order is used. Times in BRT (America/Sao_Paulo).</footer></body></html>
