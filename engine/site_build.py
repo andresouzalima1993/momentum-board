@@ -173,12 +173,12 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
          '<header class="top"><div class="crumb">Paper trading <span class="sep">/</span> <b>Momentum board</b></div><div class="top-right">'
          '<span class="badge badge-gray">Read-only</span><span class="badge badge-gray">Paper</span>'
          f'<span class="badge {badge[0]}">{badge[1]}</span><span class="clock">Updated {now_brt.strftime("%d %b %Y, %H:%M")} BRT</span></div></header>'
-         '<nav class="tabs-nav"><a href="index.html"' + (' class="active"' if page == 'live' else '') + '>Live portfolio</a>'
-         '<a href="meme.html"' + (' class="active"' if page == 'meme' else '') + '>Meme Desk</a>'
-         '<a href="backtest.html"' + (' class="active"' if page == 'backtest' else '') + '>Backtest</a></nav><main class="shell">']
+         '<nav class="tabs-nav"><a href="index.html"' + (' class="active"' if page in ('live', 'backtest') else '') + '>Hyperliquid 50/50</a>'
+         '<a href="meme.html"' + (' class="active"' if page == 'meme' else '') + '>Meme Desk</a></nav><main class="shell">']
     H.append('<section class="intro"><h2>50/50 combo: daily trend + hourly breakout</h2><p>Two strategies share one simulated Hyperliquid account of US$ 10,000.00: '
              '<b>Donchian 55</b> (daily trend following, US$ 5,000.00 sleeve) and the <b>HBO ensemble</b> (hourly volume-spike breakout, US$ 5,000.00 sleeve). '
-             'Capital is rebalanced back to 50/50 once a month. Everything is simulated from public prices: no orders are sent and no wallet or key is used.</p></section>')
+             'Capital is rebalanced back to 50/50 once a month. Everything is simulated from public prices: no orders are sent and no wallet or key is used.</p>'
+             + ('<p class="section-sub" style="margin:6px 0 0"><a href="backtest.html" style="color:#6b7289;font-size:12px">Historical backtest →</a></p>' if page == 'live' else '<p class="section-sub" style="margin:6px 0 0"><a href="index.html" style="color:#6b7289;font-size:12px">← Back to the live portfolio</a></p>') + '</section>')
     H.append(f'<div class="status-line"><span class="badge {badge[0]}">{badge[1]}</span><span>{e(status)}</span></div>')
     H.append('<div class="kpi-row">' + kpi('Equity', usd(tot), f'Start {usd(START_CAP)}') + kpi('Return since start', pct(ret), '', 'up' if ret > 0 else 'down' if ret < 0 else '')
              + kpi('Realized P&L', usd(led['realized'], True), 'Closed trades, before fees', 'up' if led['realized'] > 0 else 'down' if led['realized'] < 0 else '')
@@ -315,7 +315,7 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
         H.append('</main><footer class="foot">Paper simulation for research only, not investment advice. Meme desk data: DEX Screener, GeckoTerminal, RugCheck and GoPlus public APIs; no wallet, key or order is used. Times in BRT (America/Sao_Paulo).</footer></body></html>')
         return ''.join(H)
     else:
-        H = H[:2] + ['<section class="intro"><h2>Backtest evidence</h2><p>Historical simulation of the same rules as the live portfolio. This is research evidence, not live results. The live paper portfolio is on the first tab.</p></section>'] + H[LIVE_END:]
+        H = H[:2] + ['<section class="intro"><h2>Backtest evidence</h2><p>Historical simulation of the same rules as the live portfolio. This is research evidence, not live results. The live paper portfolio is on the first tab.</p><p class="section-sub" style="margin:6px 0 0"><a href="index.html" style="color:#6b7289;font-size:12px">← Back to the live portfolio</a></p></section>'] + H[LIVE_END:]
     H.append('</main><footer class="foot">Paper simulation for research only, not investment advice. Data: Hyperliquid public info API (candles, mids, order books and funding history). '
              'Times in BRT (America/Sao_Paulo); daily candles close at 00:00 UTC = 21:00 BRT. Past and simulated results do not guarantee future results.</footer></body></html>')
     return ''.join(H)
