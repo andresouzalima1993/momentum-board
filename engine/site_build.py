@@ -321,6 +321,7 @@ svg.chart { height: 250px; } .panel h3 { font-size: 13px; letter-spacing: .06em;
     return ''.join(H)
 
 def build_to(base, out, now_ms, info=None, mids=None):
-    for pg, path in (('live', out), ('meme', os.path.join(os.path.dirname(out), 'meme.html')), ('backtest', os.path.join(os.path.dirname(out), 'backtest.html'))):
+    # meme.html is a static page (its data loads client-side), generated once with engine/make_meme_page.py; not rebuilt here
+    for pg, path in (('live', out), ('backtest', os.path.join(os.path.dirname(out), 'backtest.html'))):
         page = build(base, now_ms, info, mids, pg)
         tmp = path + '.tmp'; open(tmp, 'w', encoding='utf-8').write(page); os.replace(tmp, path)
