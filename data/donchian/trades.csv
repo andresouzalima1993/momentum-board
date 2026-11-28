@@ -36,3 +36,4 @@ date,coin,action,side,qty,price,notional_usd,fee_usd,realized_pnl_usd,funding_us
 2026-11-26,ZEC,open,short,0.11,738.2234989833611,81.2,0.019489,0.0,0.0,-0.11,initial_position,682.4,,0.000165,live_mid_book
 2026-11-26,ZRO,open,short,67.9,1.1519349843580275,78.22,0.018772,0.0,0.0,-67.9,initial_position,1.1318,,0.00102,live_mid_book
 2026-11-26,kPEPE,open,short,30089.0,0.0035828499371771605,107.8,0.025873,0.0,0.0,-30089.0,initial_position,0.003475,,0.004515,live_mid_book
+2026-11-27,PONS,reduce,short,157.0,0.10212699941245594,16.03,0.003848,-1.701808,0.0,-540.0,rebalance,0.10236,,0.001884,live_mid_book
