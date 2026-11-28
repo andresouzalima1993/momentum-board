@@ -472,6 +472,9 @@ measures order flow and pool depth (FLOW, LIQUIDITY), and a JUDGE answers four c
 <b>MOMO</b> enters right after the verdict, <b>DIP</b> waits for a 15% pullback; <b>CONS</b> starts with US$ 1,000 and risks 1.5% per trade, <b>LADDER</b> starts with US$ 100,
 bets big while small and de-risks as it grows. Goal of LADDER: a high multiple on a small bank, accepting a real chance of losing it.</p>
 <p class="section-sub" id="md-status">Loading live data…</p></section>
+<div id="md-desks"></div>
+<section class="panel"><h2>Equity curve · NAV per unit</h2><p class="section-sub">All four books on one scale: NAV = total equity ÷ starting capital (US$ 1,000 for CONS, US$ 100 for LADDER), starting at 1.0000. Sampled every 5 minutes.</p><div id="md-curve"></div></section>
+<section class="panel"><h2>Daily P&amp;L</h2><p class="section-sub">One row per book per BRT day (closes at midnight). Equity includes open positions at liquidation value and locked profits; trades and win rate count positions closed that day.</p><div class="table-wrap"><table id="md-daily"></table></div></section>
 <section class="panel"><h2>Books</h2><p class="section-sub">Multiple = (trading bank + locked profits) ÷ start. Unrealized P&amp;L is at liquidation value (after price impact, DEX fee and network fee). Drawdown is peak-to-trough of the total bank.</p><div class="table-wrap"><table id="md-books"></table></div></section>
 <section class="panel"><h2>Growth, ruin and sample size</h2><p class="section-sub">How likely each book is to multiply or go to zero, from a bootstrap of its own closed trades through its sizing rules (100 trades). Median vs mean shows how much a few big winners carry the average. Under 30 trades the numbers are noise.</p><div class="table-wrap"><table id="md-growth"></table></div></section>
 <section class="panel"><h2>De-risking ladder</h2><p class="section-sub">LADDER books: 30% of the bank per entry up to 3x, tapering to 6% by 10x, then the conservative rules. At each doubling 33% of the new gains are locked and never traded.</p><div class="table-wrap"><table id="md-ladder"></table></div><p class="section-sub" id="md-rungs"></p></section>
@@ -497,6 +500,38 @@ bets big while small and de-risks as it grows. Goal of LADDER: a high multiple o
   function funnel(id,arr){var d=document.getElementById(id);d.textContent='';arr.forEach(function(p){var s=el('div','md-step');s.appendChild(el('div','k',p[0]));s.appendChild(el('div','v',n2(p[1],0)));d.appendChild(s);});}
   fetch(SRC+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(J){
     document.getElementById('md-status').textContent=(J.healthy?'Runner healthy':'Runner stale')+' · data updated '+J.generated_brt+' BRT · last full cycle '+(J.last_cycle_brt||'–')+' BRT · running since '+J.started_brt+' BRT · refreshed every 10 min';
+    var D=document.getElementById('md-desks');D.textContent='';
+    J.books.forEach(function(b){var sec=el('section','panel');
+      sec.appendChild(el('h2','',b.name+' · '+(b.profile==='LADDER'?'small bank, aggressive ladder':'conservative, 1.5% risk per trade')+' · '+(b.strategy==='MOMO'?'enters after the verdict':'enters on a 15% pullback')));
+      sec.appendChild(el('p','section-sub','Own paper bank of '+usd(b.start)+'. NAV per unit started at 1.0000; the BRT day closes at midnight.'+(b.profile==='LADDER'?' Locked profits count in equity but are never traded.':'')+' Sizing now: '+b.rung+', '+n2(b.size_now_pct,1)+'% of the trading bank.'));
+      var row=el('div','kpi-row');
+      function k(t,v,d,tn){var c=el('div','kpi'+(tn?' '+tn:''));c.appendChild(el('div','k',t));c.appendChild(el('div','v',v));c.appendChild(el('div','d',d||''));row.appendChild(c);}
+      function up(v){return v>0?'up':(v<0?'down':'');}
+      k('Starting capital',usd(b.start),b.profile==='LADDER'?'Aggressive ladder bank':'Conservative bank');
+      k('Current equity',usd(b.total),'Trading '+usd(b.trading)+(b.profile==='LADDER'?' + locked '+usd(b.locked):''));
+      k('Live P&L',usd(b.live_pnl,true),pc(b.return_pct)+' since start',up(b.live_pnl));
+      k("Today's P&L",usd(b.today_pnl,true),pc(b.today_pct)+' (BRT day)',up(b.today_pnl));
+      k('Realized P&L',usd(b.realized,true),'Closed trades, after costs',up(b.realized));
+      k('Unrealized P&L',usd(b.unrealized,true),'At liquidation value',up(b.unrealized));
+      k('NAV per unit',n2(b.nav,4),'Started at 1.0000',up(b.nav-1));
+      k('Locked profits',b.profile==='LADDER'?usd(b.locked):'n/a',b.profile==='LADDER'?'Next lock at '+usd(b.next_lock):'Not used in CONS');
+      k('Max drawdown',(b.max_dd_pct?'−':'')+n2(b.max_dd_pct,1)+'%','Peak-to-trough of total equity');
+      k('Open positions',b.open+'/'+b.max_open,b.pending?b.pending+' waiting for entry':'');
+      k('Trades today',String(b.trades_today),b.closes_today+' closed today');
+      sec.appendChild(row);D.appendChild(sec);});
+    (function(){var C=document.getElementById('md-curve');C.textContent='';var cols={'MOMO-CONS':'#0f1f4b','MOMO-LADDER':'#1b7a78','DIP-CONS':'#5a4fbf','DIP-LADDER':'#c27c0e'};
+      var all=[];J.books.forEach(function(b){b.curve.forEach(function(p){all.push(p);});});if(all.length<2){C.appendChild(el('p','section-sub','The curve appears after a few cycles.'));return;}
+      var W=1100,H=220,t0=Math.min.apply(null,all.map(function(p){return p[0];})),t1=Math.max.apply(null,all.map(function(p){return p[0];}));
+      var lo=Math.min(1,Math.min.apply(null,all.map(function(p){return p[1];}))),hi=Math.max(1,Math.max.apply(null,all.map(function(p){return p[1];})));var pad=(hi-lo)*0.1||0.01;lo-=pad;hi+=pad;
+      function X(t){return 50+(W-60)*((t-t0)/((t1-t0)||1));}function Y(v){return 10+(H-40)*(1-(v-lo)/(hi-lo));}
+      var NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('width','100%');svg.setAttribute('height',H);svg.setAttribute('preserveAspectRatio','none');
+      [lo+pad,1,hi-pad].forEach(function(v){var l=document.createElementNS(NS,'line');l.setAttribute('x1',50);l.setAttribute('x2',W-10);l.setAttribute('y1',Y(v));l.setAttribute('y2',Y(v));l.setAttribute('stroke','#e5e8ef');svg.appendChild(l);
+        var t=document.createElementNS(NS,'text');t.setAttribute('x',44);t.setAttribute('y',Y(v)+4);t.setAttribute('text-anchor','end');t.setAttribute('font-size','11');t.setAttribute('fill','#6b7289');t.textContent=v.toFixed(3);svg.appendChild(t);});
+      J.books.forEach(function(b){var pl=document.createElementNS(NS,'polyline');pl.setAttribute('fill','none');pl.setAttribute('stroke',cols[b.name]||'#0f1f4b');pl.setAttribute('stroke-width','2');
+        pl.setAttribute('points',b.curve.map(function(p){return X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1);}).join(' '));svg.appendChild(pl);});
+      C.appendChild(svg);var lg=el('div','legend');J.books.forEach(function(b){var sp=el('span');var i=el('i');i.style.background=cols[b.name]||'#0f1f4b';sp.appendChild(i);sp.appendChild(document.createTextNode(b.name));lg.appendChild(sp);});C.appendChild(lg);})();
+    var drows=[];J.books.forEach(function(b){b.daily.slice().reverse().forEach(function(d){drows.push([b.name,d.date+(d.open_day?' (open)':''),usd(d.start_eq),usd(d.end_eq),{v:usd(d.pnl,true),c:tone(d.pnl)},{v:pc(d.pnl_pct),c:tone(d.pnl)},n2(d.nav,4),d.trades,d.win_rate===null?'–':n2(100*d.win_rate,0)+'%']);});});
+    fill('md-daily',['Book','Date (BRT)','Start equity','End equity','P&L US$','P&L %','NAV','Trades closed','Win rate'],drows);
     fill('md-books',['Book','Start','Trading bank','Locked','Multiple','Max multiple','Return','Realized P&L','Unrealized P&L','Max drawdown','Trades','Win rate','Open','Sizing now'],
       J.books.map(function(b){var s=b.stats;return [b.name,usd(b.start),usd(b.trading),usd(b.locked),{v:n2(b.multiple)+'x',c:tone(b.multiple-1)},n2(b.max_multiple)+'x',{v:pc(b.return_pct),c:tone(b.return_pct)},
         {v:usd(b.realized,true),c:tone(b.realized)},{v:usd(b.unrealized,true),c:tone(b.unrealized)},{v:(b.max_dd_pct?'−':'')+n2(b.max_dd_pct,1)+'%',c:b.max_dd_pct?'md-n':''},s.n,
